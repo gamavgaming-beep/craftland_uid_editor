@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>UID Editor</title>
+
+<style>
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: "Segoe UI", sans-serif;
+}
+
+body {
+  background: linear-gradient(135deg, #020617, #0f172a);
+  color: white;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+}
+
+.container {
+  width: 90%;
+  max-width: 420px;
+  background: rgba(30, 41, 59, 0.85);
+  padding: 25px;
+  border-radius: 15px;
+  backdrop-filter: blur(10px);
+}
+
+h2 {
+  text-align: center;
+  color: #38bdf8;
+  margin-bottom: 20px;
+}
+
+/* Drop zone */
+.drop-zone {
+  border: 2px dashed #38bdf8;
+  padding: 20px;
+  text-align: center;
+  border-radius: 10px;
+  margin-bottom: 15px;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.drop-zone.correct {
+  border-color: #4ade80;
+  background: rgba(74, 222, 128, 0.1);
+}
+
+.drop-zone.wrong {
+  border-color: #f87171;
+  background: rgba(248, 113, 113, 0.1);
+}
+
+.filename {
+  font-size: 12px;
+  color: #4ade80;
+  margin-top: 5px;
+}
+
+input[type="file"] {
+  display: none;
+}
+
+input[type="number"] {
+  width: 100%;
+  padding: 10px;
+  border-radius: 8px;
+  border: none;
+  background: #0f172a;
+  color: white;
+  margin-bottom: 15px;
+}
+
+button {
+  width: 100%;
+  padding: 12px;
+  background: #38bdf8;
+  border: none;
+  border-radius: 8px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.loading {
+  opacity: 0.7;
+}
+
+.error {
+  background: rgba(255,0,0,0.1);
+  color: #f87171;
+  padding: 10px;
+  border-radius: 8px;
+  margin-bottom: 10px;
+  text-align: center;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+  <h2>UID Editor</h2>
+
+  
+
+  <form method="POST" enctype="multipart/form-data" onsubmit="return handleUpload()">
+
+    <!-- BYTES -->
+    <div class="drop-zone" id="bytes_zone">
+      Drop .bytes file here or click
+      <input type="file" name="bytes_file" id="bytes_file">
+      <div id="bytes_name" class="filename"></div>
+    </div>
+
+    <!-- META -->
+    <div class="drop-zone" id="meta_zone">
+      Drop .meta file here or click
+      <input type="file" name="meta_file" id="meta_file">
+      <div id="meta_name" class="filename"></div>
+    </div>
+
+    <!-- UID -->
+    <input type="number" id="uid" name="uid" placeholder="Enter UID (optional)">
+
+    <button id="btn" type="submit">Upload</button>
+  </form>
+
+  <div id="error" class="error" style="display:none;"></div>
+</div>
+
+<script>
+// File type check
+function isValid(file, type) {
+  if (!file) return false;
+
+  if (type === "bytes") return file.name.endsWith(".bytes");
+  if (type === "meta") return file.name.endsWith(".meta");
+
+  return false;
+}
+
+// Setup drop zone
+function setupDrop(zoneId, inputId, nameId, type) {
+  let zone = document.getElementById(zoneId);
+  let input = document.getElementById(inputId);
+  let nameBox = document.getElementById(nameId);
+
+  zone.onclick = () => input.click();
+
+  zone.ondragover = (e) => {
+    e.preventDefault();
+    let file = e.dataTransfer.items[0]?.getAsFile();
+
+    if (file && isValid(file, type)) {
+      zone.classList.add("correct");
+      zone.classList.remove("wrong");
+    } else {
+      zone.classList.add("wrong");
+      zone.classList.remove("correct");
+    }
+  };
+
+  zone.ondragleave = () => {
+    zone.classList.remove("correct", "wrong");
+  };
+
+  zone.ondrop = (e) => {
+    e.preventDefault();
+    zone.classList.remove("correct", "wrong");
+
+    let file = e.dataTransfer.files[0];
+
+    if (!isValid(file, type)) {
+      nameBox.innerText = "❌ Invalid file type";
+      nameBox.style.color = "#f87171";
+      return;
+    }
+
+    input.files = e.dataTransfer.files;
+    nameBox.innerText = "Selected: " + file.name;
+    nameBox.style.color = "#4ade80";
+  };
+
+  input.onchange = () => {
+    let file = input.files[0];
+
+    if (!isValid(file, type)) {
+      nameBox.innerText = "❌ Invalid file type";
+      nameBox.style.color = "#f87171";
+      input.value = "";
+      return;
+    }
+
+    nameBox.innerText = "Selected: " + file.name;
+    nameBox.style.color = "#4ade80";
+  };
+}
+
+// Apply
+setupDrop("bytes_zone", "bytes_file", "bytes_name", "bytes");
+setupDrop("meta_zone", "meta_file", "meta_name", "meta");
+
+// UID restriction
+let uidInput = document.getElementById("uid");
+uidInput.addEventListener("input", function () {
+  this.value = this.value.replace(/[^0-9]/g, "");
+});
+
+// Submit validation
+function handleUpload() {
+  let bytes = document.getElementById("bytes_file").files.length;
+  let meta = document.getElementById("meta_file").files.length;
+  let uid = uidInput.value.trim();
+  let error = document.getElementById("error");
+  let btn = document.getElementById("btn");
+
+  error.style.display = "none";
+
+  if (!bytes) {
+    error.style.display = "block";
+    error.innerText = "⚠️ Upload valid .bytes file";
+    return false;
+  }
+
+  if (!meta) {
+    error.style.display = "block";
+    error.innerText = "⚠️ Upload valid .meta file";
+    return false;
+  }
+
+  if (uid && (uid.length < 8 || uid.length > 14)) {
+    error.style.display = "block";
+    error.innerText = "⚠️ UID must be 8 to 14 digits";
+    return false;
+  }
+
+  btn.innerText = "Processing...";
+  btn.classList.add("loading");
+
+  setTimeout(() => {
+    btn.innerText = "Upload";
+    btn.classList.remove("loading");
+  }, 3000);
+
+  return true;
+}
+</script>
+
+</body>
+</html>
