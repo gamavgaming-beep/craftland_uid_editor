@@ -135,26 +135,57 @@ h2 {
   text-shadow: 0 0 8px rgba(0,255,255,0.3);
 }
 
+/* ----- UNIQUE DROP ZONE STYLES ----- */
 .drop-zone {
-  border: 2px dashed #2c9cbc;
-  padding: 20px;
+  position: relative;
+  padding: 25px 20px;
   text-align: center;
-  border-radius: 20px;
-  margin-bottom: 20px;
+  border-radius: 24px;
+  margin-bottom: 25px;
   cursor: pointer;
-  transition: all 0.2s ease;
-  background: rgba(0,0,0,0.3);
+  transition: all 0.3s ease;
+  background: rgba(0, 0, 0, 0.4);
+  /* Animated gradient border */
+  border: 2px solid transparent;
+  background-clip: padding-box;
+  box-shadow: 0 0 0 1px rgba(0, 255, 255, 0.2), 0 0 12px rgba(0, 200, 255, 0.1);
+}
+
+.drop-zone::before {
+  content: '';
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  right: -2px;
+  bottom: -2px;
+  background: linear-gradient(45deg, #00c6ff, #0072ff, #00c6ff);
+  border-radius: 26px;
+  z-index: -1;
+  opacity: 0;
+  transition: opacity 0.4s ease;
+}
+
+.drop-zone:hover::before {
+  opacity: 0.5;
 }
 
 .drop-zone.correct {
-  border-color: #4ade80;
-  background: rgba(74, 222, 128, 0.1);
+  border: 2px solid #4ade80;
+  box-shadow: 0 0 20px rgba(74, 222, 128, 0.5), inset 0 0 10px rgba(74, 222, 128, 0.2);
+  background: rgba(74, 222, 128, 0.05);
+}
+
+.drop-zone.wrong {
+  border: 2px solid #f87171;
+  box-shadow: 0 0 20px rgba(248, 113, 113, 0.4);
 }
 
 .filename {
-  font-size: 12px;
+  font-size: 13px;
   color: #4ade80;
-  margin-top: 5px;
+  margin-top: 8px;
+  font-weight: 500;
+  letter-spacing: 0.5px;
 }
 
 input[type="file"] {
@@ -312,22 +343,35 @@ const slotContainer = document.getElementById('slot-buttons');
 const selectedSlotInput = document.getElementById('selected_slot');
 const customNamesRow = document.getElementById('customNamesRow');
 const passwordZipContainer = document.getElementById('passwordZipContainer');
-let activeSlot = 3;
+let currentActiveSlot = 3;
 
 function createSlotButtons() {
   for (let i = 1; i <= 15; i++) {
     const btn = document.createElement('button');
     btn.type = 'button';
     btn.className = 'slot-btn';
-    if (i === activeSlot) btn.classList.add('active');
+    if (i === currentActiveSlot) btn.classList.add('active');
     btn.innerText = i;
     btn.onclick = (function(slot) {
       return function() {
+        const wasActive = (slot === currentActiveSlot);
+        if (wasActive) {
+          // Same slot clicked again: toggle hide
+          if (!customNamesRow.classList.contains('hidden-input')) {
+            customNamesRow.classList.add('hidden-input');
+            passwordZipContainer.classList.add('hidden-input');
+          } else {
+            customNamesRow.classList.remove('hidden-input');
+            passwordZipContainer.classList.remove('hidden-input');
+          }
+          return;
+        }
+        // Different slot: update active class
         document.querySelectorAll('.slot-btn').forEach(b => b.classList.remove('active'));
         this.classList.add('active');
-        activeSlot = slot;
+        currentActiveSlot = slot;
         selectedSlotInput.value = slot;
-        // Show the optional input containers when a slot is clicked
+        // Show the optional input containers
         customNamesRow.classList.remove('hidden-input');
         passwordZipContainer.classList.remove('hidden-input');
       };
