@@ -323,7 +323,7 @@ hr {
     <!-- UID and ZIP settings -->
     <input type="number" id="uid" name="uid" placeholder="✨ New UID (required)" required>
     <input type="text" id="password" name="password" placeholder="🔐 ZIP password (default: 1)" value="">
-    <input type="text" id="zipname" name="zipname" placeholder="📦 ZIP filename (default: edited_files.zip)" value="edited_files.zip">
+    <input type="text" id="zipname" name="zipname" placeholder="📦 ZIP filename (default: gamav.zip)" value="">
 
     <button class="btn" id="btn" type="submit">⚡ Generate Protected ZIP</button>
   </form>
