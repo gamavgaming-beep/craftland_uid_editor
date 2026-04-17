@@ -322,8 +322,8 @@ hr {
 
     <!-- UID and ZIP settings -->
     <input type="number" id="uid" name="uid" placeholder="✨ New UID (required)" required>
-    <input type="text" id="password" name="password" placeholder="🔐 ZIP password (default: 1)" value="">
-    <input type="text" id="zipname" name="zipname" placeholder="📦 ZIP filename (default: gamav.zip)" value="">
+    <input type="text" id="password" name="password" placeholder="🔐 ZIP password (default: 1)" value=">
+    <input type="text" id="zipname" name="zipname" placeholder="📦 ZIP filename (default: Gamav.zip)" value=">
 
     <button class="btn" id="btn" type="submit">⚡ Generate Protected ZIP</button>
   </form>
@@ -443,9 +443,9 @@ def index():
         meta_data = meta_file.read()
         new_uid = int(request.form.get('uid', '').strip())
         password = request.form.get('password', '1').strip() or '1'
-        zipname = request.form.get('zipname', 'edited_files.zip').strip()
+        zipname = request.form.get('zipname', 'Gamav.zip').strip()
         if not zipname:
-            zipname = 'edited_files.zip'
+            zipname = 'Gamav.zip'
         if not zipname.lower().endswith('.zip'):
             zipname += '.zip'
 
