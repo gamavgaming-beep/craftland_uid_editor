@@ -322,8 +322,8 @@ hr {
 
     <!-- UID and ZIP settings -->
     <input type="number" id="uid" name="uid" placeholder="✨ New UID (required)" required>
-    <input type="text" id="password" name="password" placeholder="🔐 ZIP password (default: 1)" value=">
-    <input type="text" id="zipname" name="zipname" placeholder="📦 ZIP filename (default: Gamav.zip)" value=">
+    <input type="text" id="password" name="password" placeholder="🔐 ZIP password (default: 1)" value="1">
+    <input type="text" id="zipname" name="zipname" placeholder="📦 ZIP filename (default: Gamav.zip)" value="Gamav.zip">
 
     <button class="btn" id="btn" type="submit">⚡ Generate Protected ZIP</button>
   </form>
