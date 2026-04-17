@@ -4,7 +4,7 @@ import pyzipper
 
 app = Flask(__name__)
 
-# Protobuf UID modifier (field 7 varint)
+# Protobuf UID modifier (field 7 varint) – same as before
 def modify_protobuf_uid(data, new_uid):
     result = bytearray()
     i = 0
@@ -49,7 +49,6 @@ def modify_protobuf_uid(data, new_uid):
                 if not (b & 0x80):
                     break
             varint_bytes = data[start_i:i]
-
             if field_num == 7 and not modified:
                 new_varint = encode_varint(new_uid)
                 result.extend(encode_varint(key))
@@ -58,7 +57,6 @@ def modify_protobuf_uid(data, new_uid):
             else:
                 result.extend(encode_varint(key))
                 result.extend(varint_bytes)
-
         elif wire_type == 2:
             length_val = 0
             shift = 0
@@ -74,7 +72,6 @@ def modify_protobuf_uid(data, new_uid):
             result.extend(encode_varint(key))
             result.extend(encode_varint(length_val))
             result.extend(payload)
-
         elif wire_type == 1:
             result.extend(encode_varint(key))
             result.extend(data[i:i+8])
@@ -90,12 +87,10 @@ def modify_protobuf_uid(data, new_uid):
     if not modified:
         result.extend(encode_varint((7 << 3) | 0))
         result.extend(encode_varint(new_uid))
-
     return bytes(result)
 
 
-# HTML Template with professional look and slot selector
-HTML_TEMPLATE = """
+HTML = """
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -111,314 +106,299 @@ HTML_TEMPLATE = """
 }
 
 body {
-  background: radial-gradient(circle at 20% 30%, #0a0f2a, #030617);
-  min-height: 100vh;
+  background: linear-gradient(135deg, #0a0f1e, #0a1a2f);
+  color: #e0e0e0;
   display: flex;
   justify-content: center;
   align-items: center;
+  min-height: 100vh;
   padding: 20px;
 }
 
 .container {
-  max-width: 700px;
-  width: 100%;
-  background: rgba(15, 25, 45, 0.7);
+  width: 90%;
+  max-width: 750px;
+  background: rgba(18, 25, 45, 0.85);
   backdrop-filter: blur(12px);
-  border-radius: 32px;
   padding: 30px;
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(0, 255, 255, 0.1);
-  transition: all 0.3s;
+  border-radius: 28px;
+  box-shadow: 0 20px 35px rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(0, 255, 255, 0.2);
 }
 
-h1 {
+h2 {
   text-align: center;
-  font-size: 28px;
-  font-weight: 700;
-  background: linear-gradient(135deg, #aaffff, #3b82f6);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-  margin-bottom: 8px;
-  letter-spacing: -0.3px;
+  color: #4ff0ff;
+  margin-bottom: 20px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  text-shadow: 0 0 8px rgba(0,255,255,0.3);
 }
 
-.sub {
-  text-align: center;
-  color: #8ba3c7;
-  margin-bottom: 30px;
-  font-size: 14px;
-  border-bottom: 1px dashed #2a3a5a;
-  display: inline-block;
-  width: auto;
-  margin-left: auto;
-  margin-right: auto;
-  padding-bottom: 6px;
-}
-
-/* Drop zones */
 .drop-zone {
-  background: rgba(0, 10, 25, 0.6);
-  border: 2px dashed #2c5f8a;
-  border-radius: 20px;
+  border: 2px dashed #2c9cbc;
   padding: 20px;
   text-align: center;
+  border-radius: 20px;
   margin-bottom: 20px;
   cursor: pointer;
-  transition: 0.2s;
-}
-.drop-zone:hover {
-  border-color: #3b82f6;
-  background: rgba(59, 130, 246, 0.1);
-}
-.drop-zone.correct {
-  border-color: #10b981;
-  background: rgba(16, 185, 129, 0.1);
-}
-.filename {
-  font-size: 13px;
-  color: #6ee7b7;
-  margin-top: 8px;
-  word-break: break-all;
+  transition: all 0.2s ease;
+  background: rgba(0,0,0,0.3);
 }
 
-/* Inputs */
-input, select {
-  width: 100%;
-  padding: 12px 16px;
-  background: #0f1a2e;
-  border: 1px solid #2d3a5e;
-  border-radius: 16px;
-  color: white;
-  font-size: 14px;
-  margin-bottom: 16px;
-  transition: 0.2s;
+.drop-zone.correct {
+  border-color: #4ade80;
+  background: rgba(74, 222, 128, 0.1);
 }
-input:focus, select:focus {
-  outline: none;
-  border-color: #3b82f6;
-  box-shadow: 0 0 0 2px rgba(59,130,246,0.3);
-}
-.row {
-  display: flex;
-  gap: 15px;
-  margin-bottom: 16px;
-}
-.row > div {
-  flex: 1;
-}
-label {
+
+.filename {
   font-size: 12px;
-  color: #9bb5d4;
-  margin-bottom: 4px;
-  display: block;
+  color: #4ade80;
+  margin-top: 5px;
 }
-.btn {
-  background: linear-gradient(95deg, #2563eb, #1e40af);
+
+input[type="file"] {
+  display: none;
+}
+
+input[type="text"], input[type="number"] {
+  width: 100%;
+  padding: 12px;
+  border-radius: 14px;
   border: none;
+  background: #0f172f;
+  color: white;
+  margin-bottom: 15px;
+  font-size: 14px;
+}
+
+button {
+  width: 100%;
   padding: 14px;
+  background: linear-gradient(95deg, #2b6e9e, #1e4a76);
+  border: none;
   border-radius: 40px;
   font-weight: bold;
-  font-size: 16px;
-  color: white;
   cursor: pointer;
+  color: white;
+  font-size: 16px;
   transition: 0.2s;
-  width: 100%;
-  margin-top: 10px;
-  box-shadow: 0 4px 12px rgba(37,99,235,0.3);
+  box-shadow: 0 5px 15px rgba(0,0,0,0.3);
 }
-.btn:hover {
-  transform: translateY(-2px);
-  filter: brightness(1.05);
-  box-shadow: 0 8px 20px rgba(37,99,235,0.4);
+
+button:hover {
+  background: linear-gradient(95deg, #3a86c0, #2a5a8e);
+  transform: scale(1.01);
 }
+
 .loading {
   opacity: 0.7;
-  transform: scale(0.98);
 }
+
 .error {
-  background: rgba(220, 38, 38, 0.2);
-  color: #fca5a5;
-  padding: 12px;
-  border-radius: 16px;
+  background: rgba(255,0,0,0.15);
+  color: #ff9999;
+  padding: 10px;
+  border-radius: 14px;
+  margin-bottom: 15px;
   text-align: center;
-  margin-bottom: 16px;
-  border-left: 3px solid #ef4444;
 }
+
+.row {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 15px;
+  flex-wrap: wrap;
+}
+
+.row input {
+  flex: 1;
+  margin-bottom: 0;
+}
+
 .slot-selector {
-  background: #0a1120;
-  border-radius: 24px;
-  padding: 15px;
   margin-bottom: 20px;
-  border: 1px solid #2a3f6e;
 }
-.slot-selector label {
-  font-weight: 600;
-  color: #60a5fa;
-  margin-bottom: 8px;
+
+.slot-title {
+  margin-bottom: 12px;
+  font-weight: 500;
+  color: #b0e0ff;
 }
-select {
-  background: #0f1a2e;
+
+.slot-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.slot-btn {
+  background: #1e2a3a;
+  border: 1px solid #3a6ea5;
+  color: #c0e0ff;
+  padding: 8px 16px;
+  border-radius: 40px;
   cursor: pointer;
+  font-weight: bold;
+  transition: 0.1s;
+  width: auto;
+  box-shadow: none;
 }
-hr {
-  border-color: #1e2f4a;
-  margin: 20px 0;
+
+.slot-btn.active {
+  background: #2c6e9e;
+  color: white;
+  border-color: #4ff0ff;
+  box-shadow: 0 0 6px #4ff0ff;
+}
+
+.slot-btn:hover {
+  background: #2c6e9e;
+  transform: none;
+}
+
+.hidden-input {
+  display: none;
+}
+
+.password-zip-row {
+  display: flex;
+  gap: 12px;
+  margin-top: 10px;
+  margin-bottom: 15px;
+}
+
+.password-zip-row input {
+  flex: 1;
+  margin-bottom: 0;
 }
 </style>
 </head>
 <body>
 <div class="container">
-  <h1>🏰 Craftland Map UID Editor</h1>
-  <div class="sub">Advanced Tool 🔧 | Password Protected ZIP</div>
+<h2>🗺️ Craftland Map UID Editor Advanced Tool</h2>
+<form method="POST" enctype="multipart/form-data" onsubmit="return handleUpload()">
+<div class="drop-zone" id="bytes_zone">📁 Drop .bytes file here or click<input type="file" name="bytes_file" id="bytes_file" accept=".bytes" required><div id="bytes_name" class="filename"></div></div>
+<div class="drop-zone" id="meta_zone">📄 Drop .meta file here or click<input type="file" name="meta_file" id="meta_file" accept=".meta" required><div id="meta_name" class="filename"></div></div>
 
-  <form method="POST" enctype="multipart/form-data" onsubmit="return handleUpload()">
-    <!-- Bytes & Meta drop zones -->
-    <div class="drop-zone" id="bytes_zone">
-      📁 Drop .bytes file or click
-      <input type="file" name="bytes_file" id="bytes_file" accept=".bytes" required>
-      <div id="bytes_name" class="filename"></div>
-    </div>
-    <div class="drop-zone" id="meta_zone">
-      📄 Drop .meta file or click
-      <input type="file" name="meta_file" id="meta_file" accept=".meta" required>
-      <div id="meta_name" class="filename"></div>
-    </div>
+<input type="number" id="uid" name="uid" placeholder="🔢 New UID (required)" required>
 
-    <!-- Slot selector 1-15 -->
-    <div class="slot-selector">
-      <label>🎮 Slot Number (1–15):</label>
-      <select id="slot_select">
-        <option value="">-- Custom / Keep original names --</option>
-        <option value="1">Slot 1</option>
-        <option value="2">Slot 2</option>
-        <option value="3">Slot 3</option>
-        <option value="4">Slot 4</option>
-        <option value="5">Slot 5</option>
-        <option value="6">Slot 6</option>
-        <option value="7">Slot 7</option>
-        <option value="8">Slot 8</option>
-        <option value="9">Slot 9</option>
-        <option value="10">Slot 10</option>
-        <option value="11">Slot 11</option>
-        <option value="12">Slot 12</option>
-        <option value="13">Slot 13</option>
-        <option value="14">Slot 14</option>
-        <option value="15">Slot 15</option>
-      </select>
-      <div style="font-size:12px; color:#7e9bc0; margin-top:6px;">Select slot → auto fills custom names below</div>
-    </div>
+<div class="slot-selector">
+<div class="slot-title">🎮 Select Slot Number (1-15) – default filename inside ZIP</div>
+<div class="slot-buttons" id="slot-buttons"></div>
+<input type="hidden" id="selected_slot" name="selected_slot" value="3">
+</div>
 
-    <!-- Custom names row -->
-    <div class="row">
-      <div>
-        <label>Custom .bytes name (optional)</label>
-        <input type="text" id="bytes_custom" name="bytes_custom" placeholder="e.g., my_map.bytes">
-      </div>
-      <div>
-        <label>Custom .meta name (optional)</label>
-        <input type="text" id="meta_custom" name="meta_custom" placeholder="e.g., my_map.meta">
-      </div>
-    </div>
+<!-- Custom bytes & meta row - initially hidden -->
+<div id="customNamesRow" class="row hidden-input">
+<input type="text" id="bytes_custom" name="bytes_custom" placeholder="✏️ Custom .bytes name (optional)">
+<input type="text" id="meta_custom" name="meta_custom" placeholder="✏️ Custom .meta name (optional)">
+</div>
 
-    <!-- UID and ZIP settings -->
-    <input type="number" id="uid" name="uid" placeholder="✨ New UID (required)" required>
-    <input type="text" id="password" name="password" placeholder="🔐 ZIP password (default: 1)" value="1">
-    <input type="text" id="zipname" name="zipname" placeholder="📦 ZIP filename (default: Gamav.zip)" value="Gamav.zip">
+<!-- Password and ZIP name fields - initially hidden -->
+<div id="passwordZipContainer" class="password-zip-row hidden-input">
+<input type="text" id="password" name="password" placeholder="🔒 ZIP password (default: 123456)">
+<input type="text" id="zipname" name="zipname" placeholder="📦 ZIP filename (default: Default.zip)">
+</div>
 
-    <button class="btn" id="btn" type="submit">⚡ Generate Protected ZIP</button>
-  </form>
-  <div id="error" class="error" style="display:none;"></div>
+<button id="btn" type="submit">⚡ Generate Protected ZIP</button>
+</form>
+<div id="error" class="error" style="display:none;"></div>
 </div>
 
 <script>
-// Setup drop zones
+// Generate slot buttons 1-15
+const slotContainer = document.getElementById('slot-buttons');
+const selectedSlotInput = document.getElementById('selected_slot');
+const customNamesRow = document.getElementById('customNamesRow');
+const passwordZipContainer = document.getElementById('passwordZipContainer');
+let activeSlot = 3;
+
+function createSlotButtons() {
+  for (let i = 1; i <= 15; i++) {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'slot-btn';
+    if (i === activeSlot) btn.classList.add('active');
+    btn.innerText = i;
+    btn.onclick = (function(slot) {
+      return function() {
+        document.querySelectorAll('.slot-btn').forEach(b => b.classList.remove('active'));
+        this.classList.add('active');
+        activeSlot = slot;
+        selectedSlotInput.value = slot;
+        // Show the optional input containers when a slot is clicked
+        customNamesRow.classList.remove('hidden-input');
+        passwordZipContainer.classList.remove('hidden-input');
+      };
+    })(i);
+    slotContainer.appendChild(btn);
+  }
+}
+createSlotButtons();
+
 function setupDrop(zoneId, inputId, nameId, ext) {
-  let zone = document.getElementById(zoneId);
-  let input = document.getElementById(inputId);
-  let nameBox = document.getElementById(nameId);
-  zone.onclick = () => input.click();
-  zone.ondragover = (e) => { e.preventDefault(); zone.classList.add("correct"); };
-  zone.ondragleave = () => zone.classList.remove("correct");
-  zone.ondrop = (e) => {
-    e.preventDefault();
-    zone.classList.remove("correct");
-    let file = e.dataTransfer.files[0];
-    if (!file || !file.name.endsWith(ext)) {
-      nameBox.innerText = "❌ Invalid file type";
-      nameBox.style.color = "#f87171";
-      return;
-    }
-    input.files = e.dataTransfer.files;
-    nameBox.innerText = "✅ " + file.name;
-    nameBox.style.color = "#6ee7b7";
-  };
-  input.onchange = () => {
-    let file = input.files[0];
-    if (!file || !file.name.endsWith(ext)) {
-      nameBox.innerText = "❌ Invalid file type";
-      nameBox.style.color = "#f87171";
-      input.value = "";
-      return;
-    }
-    nameBox.innerText = "✅ " + file.name;
-    nameBox.style.color = "#6ee7b7";
-  };
+    let zone = document.getElementById(zoneId);
+    let input = document.getElementById(inputId);
+    let nameBox = document.getElementById(nameId);
+    zone.onclick = () => input.click();
+    zone.ondragover = (e) => { e.preventDefault(); zone.classList.add("correct"); };
+    zone.ondragleave = () => zone.classList.remove("correct");
+    zone.ondrop = (e) => {
+        e.preventDefault();
+        zone.classList.remove("correct");
+        let file = e.dataTransfer.files[0];
+        if (!file || !file.name.endsWith(ext)) {
+            nameBox.innerText = "❌ Invalid file type";
+            nameBox.style.color = "#f87171";
+            return;
+        }
+        input.files = e.dataTransfer.files;
+        nameBox.innerText = "✅ " + file.name;
+        nameBox.style.color = "#4ade80";
+    };
+    input.onchange = () => {
+        let file = input.files[0];
+        if (!file || !file.name.endsWith(ext)) {
+            nameBox.innerText = "❌ Invalid file type";
+            nameBox.style.color = "#f87171";
+            input.value = "";
+            return;
+        }
+        nameBox.innerText = "✅ " + file.name;
+        nameBox.style.color = "#4ade80";
+    };
 }
 setupDrop("bytes_zone", "bytes_file", "bytes_name", ".bytes");
 setupDrop("meta_zone", "meta_file", "meta_name", ".meta");
 
-// Slot selector -> auto fill custom names
-const slotSelect = document.getElementById("slot_select");
-const bytesCustom = document.getElementById("bytes_custom");
-const metaCustom = document.getElementById("meta_custom");
-
-slotSelect.addEventListener("change", function() {
-  let val = this.value;
-  if (val) {
-    bytesCustom.value = `ProjectData_slot_${val}.bytes`;
-    metaCustom.value = `ProjectData_slot_${val}.meta`;
-  } else {
-    // clear custom fields, user can type or keep original
-    bytesCustom.value = "";
-    metaCustom.value = "";
-  }
-});
-
-// UID digits only
 let uidInput = document.getElementById("uid");
 uidInput.addEventListener("input", function() { this.value = this.value.replace(/[^0-9]/g, ""); });
 
-// Validate before submit
 function handleUpload() {
-  let errorDiv = document.getElementById("error");
-  errorDiv.style.display = "none";
-  if (document.getElementById("bytes_file").files.length === 0) {
-    errorDiv.innerText = "⚠️ Please upload a .bytes file";
-    errorDiv.style.display = "block";
-    return false;
-  }
-  if (document.getElementById("meta_file").files.length === 0) {
-    errorDiv.innerText = "⚠️ Please upload a .meta file";
-    errorDiv.style.display = "block";
-    return false;
-  }
-  let uid = uidInput.value.trim();
-  if (!uid) {
-    errorDiv.innerText = "⚠️ Enter new UID (8-14 digits)";
-    errorDiv.style.display = "block";
-    return false;
-  }
-  let zipname = document.getElementById("zipname").value.trim();
-  if (zipname && !zipname.toLowerCase().endsWith(".zip")) {
-    errorDiv.innerText = "⚠️ ZIP filename must end with .zip";
-    errorDiv.style.display = "block";
-    return false;
-  }
-  let btn = document.getElementById("btn");
-  btn.innerText = "⏳ Processing...";
-  btn.classList.add("loading");
-  setTimeout(() => { btn.innerText = "⚡ Generate Protected ZIP"; btn.classList.remove("loading"); }, 3000);
-  return true;
+    let errorDiv = document.getElementById("error");
+    errorDiv.style.display = "none";
+    if (document.getElementById("bytes_file").files.length === 0) {
+        errorDiv.innerText = "⚠️ Upload .bytes file";
+        errorDiv.style.display = "block";
+        return false;
+    }
+    if (document.getElementById("meta_file").files.length === 0) {
+        errorDiv.innerText = "⚠️ Upload .meta file";
+        errorDiv.style.display = "block";
+        return false;
+    }
+    let uid = uidInput.value.trim();
+    if (!uid) {
+        errorDiv.innerText = "⚠️ Enter new UID";
+        errorDiv.style.display = "block";
+        return false;
+    }
+    let btn = document.getElementById("btn");
+    btn.innerText = "⏳ Processing...";
+    btn.classList.add("loading");
+    setTimeout(() => { btn.innerText = "⚡ Generate Protected ZIP"; btn.classList.remove("loading"); }, 2000);
+    return true;
 }
 </script>
 </body>
@@ -428,7 +408,7 @@ function handleUpload() {
 @app.route('/', methods=['GET', 'POST'])
 def index():
     if request.method == 'GET':
-        return render_template_string(HTML_TEMPLATE)
+        return render_template_string(HTML)
 
     # POST handling
     if 'bytes_file' not in request.files or 'meta_file' not in request.files:
@@ -442,30 +422,37 @@ def index():
         original_bytes = bytes_file.read()
         meta_data = meta_file.read()
         new_uid = int(request.form.get('uid', '').strip())
-        password = request.form.get('password', '1').strip() or '1'
-        zipname = request.form.get('zipname', 'Gamav.zip').strip()
+        password = request.form.get('password', '').strip()
+        zipname = request.form.get('zipname', '').strip()
+
+        if not password:
+            password = "123456"
         if not zipname:
-            zipname = 'Gamav.zip'
+            zipname = "Default.zip"
         if not zipname.lower().endswith('.zip'):
             zipname += '.zip'
 
-        # Custom names: if slot selected, those are auto-filled in form; else use original filenames
+        selected_slot = request.form.get('selected_slot', '3').strip()
+        try:
+            slot = int(selected_slot)
+            if slot < 1 or slot > 15:
+                slot = 3
+        except:
+            slot = 3
+
         bytes_custom = request.form.get('bytes_custom', '').strip()
         meta_custom = request.form.get('meta_custom', '').strip()
         if not bytes_custom:
-            bytes_custom = bytes_file.filename
+            bytes_custom = f'ProjectData_slot_{slot}.bytes'
         if not meta_custom:
-            meta_custom = meta_file.filename
-        # Ensure extensions
+            meta_custom = f'ProjectData_slot_{slot}.meta'
         if not bytes_custom.lower().endswith('.bytes'):
             bytes_custom += '.bytes'
         if not meta_custom.lower().endswith('.meta'):
             meta_custom += '.meta'
 
-        # Modify UID
         modified_bytes = modify_protobuf_uid(original_bytes, new_uid)
 
-        # Create password-protected ZIP
         zip_buffer = io.BytesIO()
         with pyzipper.AESZipFile(zip_buffer, 'w', compression=pyzipper.ZIP_DEFLATED, encryption=pyzipper.WZ_AES) as zf:
             zf.setpassword(password.encode('utf-8'))
@@ -476,6 +463,7 @@ def index():
         return send_file(zip_buffer, as_attachment=True, download_name=zipname, mimetype='application/zip')
     except Exception as e:
         return f"Error: {str(e)}", 500
+
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)
