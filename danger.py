@@ -4,7 +4,7 @@ import pyzipper
 
 app = Flask(__name__)
 
-# Protobuf UID modifier (field 7 varint)
+# Protobuf UID modifier (field 7 varint) – same as before
 def modify_protobuf_uid(data, new_uid):
     result = bytearray()
     i = 0
@@ -135,6 +135,7 @@ h2 {
   text-shadow: 0 0 8px rgba(0,255,255,0.3);
 }
 
+/* Drop zones */
 .drop-zone {
   position: relative;
   padding: 25px 20px;
@@ -190,15 +191,33 @@ input[type="file"] {
   display: none;
 }
 
-input[type="text"], input[type="number"], select {
+/* Labels */
+label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 500;
+  color: #b0e0ff;
+  font-size: 14px;
+  letter-spacing: 0.3px;
+}
+
+input[type="text"], 
+input[type="number"], 
+select {
   width: 100%;
   padding: 12px;
   border-radius: 14px;
   border: none;
   background: #0f172f;
   color: white;
-  margin-bottom: 15px;
+  margin-bottom: 20px;
   font-size: 14px;
+  transition: 0.2s;
+}
+
+input:focus, select:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px #4ff0ff;
 }
 
 select {
@@ -221,6 +240,7 @@ button {
   font-size: 16px;
   transition: 0.2s;
   box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+  margin-top: 10px;
 }
 
 button:hover {
@@ -235,22 +255,22 @@ button:hover {
 .error {
   background: rgba(255,0,0,0.15);
   color: #ff9999;
-  padding: 10px;
+  padding: 12px;
   border-radius: 14px;
-  margin-bottom: 15px;
+  margin-bottom: 20px;
   text-align: center;
+  font-size: 14px;
 }
 
 .row {
   display: flex;
-  gap: 12px;
-  margin-bottom: 15px;
+  gap: 16px;
+  margin-bottom: 20px;
   flex-wrap: wrap;
 }
 
-.row input {
+.row .field-group {
   flex: 1;
-  margin-bottom: 0;
 }
 
 .hidden-input {
@@ -259,13 +279,22 @@ button:hover {
 
 .password-zip-row {
   display: flex;
-  gap: 12px;
-  margin-bottom: 15px;
+  gap: 16px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
 }
 
-.password-zip-row input {
+.password-zip-row .field-group {
   flex: 1;
-  margin-bottom: 0;
+}
+
+.field-group {
+  margin-bottom: 20px;
+}
+
+hr {
+  margin: 15px 0;
+  border-color: rgba(0,255,255,0.2);
 }
 </style>
 </head>
@@ -273,43 +302,78 @@ button:hover {
 <div class="container">
 <h2>🗺️ Craftland Map UID Editor Advanced Tool</h2>
 <form method="POST" enctype="multipart/form-data" onsubmit="return handleUpload()">
-<div class="drop-zone" id="bytes_zone">📁 Drop .bytes file here or click<input type="file" name="bytes_file" id="bytes_file" accept=".bytes" required><div id="bytes_name" class="filename"></div></div>
-<div class="drop-zone" id="meta_zone">📄 Drop .meta file here or click<input type="file" name="meta_file" id="meta_file" accept=".meta" required><div id="meta_name" class="filename"></div></div>
 
-<input type="number" id="uid" name="uid" placeholder="🔢 New UID (required)" required>
-
-<div class="slot-selector">
-<label style="display:block; margin-bottom:8px;">🎮 Slot Selection</label>
-<select id="slot_select" name="slot_select">
-  <option value="original">📁 Keep Original (use uploaded file names)</option>
-  <option value="1">Slot 1</option>
-  <option value="2">Slot 2</option>
-  <option value="3">Slot 3</option>
-  <option value="4">Slot 4</option>
-  <option value="5">Slot 5</option>
-  <option value="6">Slot 6</option>
-  <option value="7">Slot 7</option>
-  <option value="8">Slot 8</option>
-  <option value="9">Slot 9</option>
-  <option value="10">Slot 10</option>
-  <option value="11">Slot 11</option>
-  <option value="12">Slot 12</option>
-  <option value="13">Slot 13</option>
-  <option value="14">Slot 14</option>
-  <option value="15">Slot 15</option>
-</select>
+<!-- Bytes File Upload -->
+<div class="field-group">
+  <label>📁 .bytes File (required)</label>
+  <div class="drop-zone" id="bytes_zone">
+    Drop .bytes file here or click
+    <input type="file" name="bytes_file" id="bytes_file" accept=".bytes" required>
+    <div id="bytes_name" class="filename"></div>
+  </div>
 </div>
 
-<!-- Custom bytes & meta row - initially hidden (only shows when slot number selected) -->
+<!-- Meta File Upload -->
+<div class="field-group">
+  <label>📄 .meta File (required)</label>
+  <div class="drop-zone" id="meta_zone">
+    Drop .meta file here or click
+    <input type="file" name="meta_file" id="meta_file" accept=".meta" required>
+    <div id="meta_name" class="filename"></div>
+  </div>
+</div>
+
+<!-- New UID -->
+<div class="field-group">
+  <label>🔢 New UID (required)</label>
+  <input type="number" id="uid" name="uid" placeholder="Enter new UID" required>
+</div>
+
+<!-- Slot Selection Dropdown -->
+<div class="field-group">
+  <label>🎮 Slot Selection</label>
+  <select id="slot_select" name="slot_select">
+    <option value="original">📁 Keep Original (use uploaded file names)</option>
+    <option value="1">Slot 1</option>
+    <option value="2">Slot 2</option>
+    <option value="3">Slot 3</option>
+    <option value="4">Slot 4</option>
+    <option value="5">Slot 5</option>
+    <option value="6">Slot 6</option>
+    <option value="7">Slot 7</option>
+    <option value="8">Slot 8</option>
+    <option value="9">Slot 9</option>
+    <option value="10">Slot 10</option>
+    <option value="11">Slot 11</option>
+    <option value="12">Slot 12</option>
+    <option value="13">Slot 13</option>
+    <option value="14">Slot 14</option>
+    <option value="15">Slot 15</option>
+  </select>
+</div>
+
+<!-- Custom Names Row (hidden when Keep Original selected) -->
 <div id="customNamesRow" class="row hidden-input">
-<input type="text" id="bytes_custom" name="bytes_custom" placeholder="✏️ Custom .bytes name (optional)">
-<input type="text" id="meta_custom" name="meta_custom" placeholder="✏️ Custom .meta name (optional)">
+  <div class="field-group">
+    <label>✏️ Custom .bytes name (optional)</label>
+    <input type="text" id="bytes_custom" name="bytes_custom" placeholder="e.g., MyMap.bytes">
+  </div>
+  <div class="field-group">
+    <label>✏️ Custom .meta name (optional)</label>
+    <input type="text" id="meta_custom" name="meta_custom" placeholder="e.g., MyMap.meta">
+  </div>
 </div>
 
-<!-- Password and ZIP name fields - always visible -->
+<!-- Password and ZIP Name - always visible -->
 <div class="password-zip-row">
-<input type="text" id="password" name="password" placeholder="🔒 ZIP password (default: 123456)">
-<input type="text" id="zipname" name="zipname" placeholder="📦 ZIP filename (default: Default.zip)">
+  <div class="field-group">
+    <label>🔒 ZIP Password (optional, default: 123456)</label>
+    <input type="text" id="password" name="password" placeholder="Leave empty for default">
+  </div>
+  <div class="field-group">
+    <label>📦 ZIP Filename (optional, default: Default.zip)</label>
+    <input type="text" id="zipname" name="zipname" placeholder="Leave empty for default">
+  </div>
 </div>
 
 <button id="btn" type="submit">⚡ Generate Protected ZIP</button>
@@ -387,18 +451,18 @@ function handleUpload() {
     let errorDiv = document.getElementById("error");
     errorDiv.style.display = "none";
     if (document.getElementById("bytes_file").files.length === 0) {
-        errorDiv.innerText = "⚠️ Upload .bytes file";
+        errorDiv.innerText = "⚠️ Please upload a .bytes file";
         errorDiv.style.display = "block";
         return false;
     }
     if (document.getElementById("meta_file").files.length === 0) {
-        errorDiv.innerText = "⚠️ Upload .meta file";
+        errorDiv.innerText = "⚠️ Please upload a .meta file";
         errorDiv.style.display = "block";
         return false;
     }
     let uid = uidInput.value.trim();
     if (!uid) {
-        errorDiv.innerText = "⚠️ Enter new UID";
+        errorDiv.innerText = "⚠️ Please enter a new UID";
         errorDiv.style.display = "block";
         return false;
     }
@@ -433,7 +497,6 @@ def index():
         password = request.form.get('password', '').strip()
         zipname = request.form.get('zipname', '').strip()
 
-        # Defaults if empty
         if not password:
             password = "123456"
         if not zipname:
@@ -446,7 +509,6 @@ def index():
         meta_custom = request.form.get('meta_custom', '').strip()
 
         if slot_select == 'original':
-            # Use original uploaded filenames
             bytes_name = bytes_file.filename
             meta_name = meta_file.filename
         else:
@@ -464,16 +526,13 @@ def index():
                 meta_name = meta_custom
             else:
                 meta_name = f'ProjectData_slot_{slot}.meta'
-            # Ensure extensions
             if not bytes_name.lower().endswith('.bytes'):
                 bytes_name += '.bytes'
             if not meta_name.lower().endswith('.meta'):
                 meta_name += '.meta'
 
-        # Modify UID
         modified_bytes = modify_protobuf_uid(original_bytes, new_uid)
 
-        # Create password-protected ZIP
         zip_buffer = io.BytesIO()
         with pyzipper.AESZipFile(zip_buffer, 'w', compression=pyzipper.ZIP_DEFLATED, encryption=pyzipper.WZ_AES) as zf:
             zf.setpassword(password.encode('utf-8'))
