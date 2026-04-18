@@ -201,13 +201,14 @@ label {
   letter-spacing: 0.3px;
 }
 
+/* 🔥 ALL INPUTS have permanent border + glow on focus */
 input[type="text"], 
 input[type="number"], 
 select {
   width: 100%;
   padding: 12px;
   border-radius: 14px;
-  border: none;
+  border: 1px solid rgba(0, 255, 255, 0.4);   /* always visible highlight border */
   background: #0f172f;
   color: white;
   margin-bottom: 20px;
@@ -215,9 +216,12 @@ select {
   transition: 0.2s;
 }
 
-input:focus, select:focus {
+input[type="text"]:focus, 
+input[type="number"]:focus, 
+select:focus {
+  border-color: #4ff0ff;
+  box-shadow: 0 0 0 2px rgba(79, 240, 255, 0.4), 0 0 8px #4ff0ff;
   outline: none;
-  box-shadow: 0 0 0 2px #4ff0ff;
 }
 
 select {
@@ -268,11 +272,6 @@ button:hover {
 
 .hidden-input {
   display: none;
-}
-
-hr {
-  margin: 15px 0;
-  border-color: rgba(0,255,255,0.2);
 }
 </style>
 </head>
