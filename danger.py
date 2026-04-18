@@ -117,7 +117,7 @@ body {
 
 .container {
   width: 90%;
-  max-width: 750px;
+  max-width: 650px;
   background: rgba(18, 25, 45, 0.85);
   backdrop-filter: blur(12px);
   padding: 30px;
@@ -262,34 +262,12 @@ button:hover {
   font-size: 14px;
 }
 
-.row {
-  display: flex;
-  gap: 16px;
+.field-group {
   margin-bottom: 20px;
-  flex-wrap: wrap;
-}
-
-.row .field-group {
-  flex: 1;
 }
 
 .hidden-input {
   display: none;
-}
-
-.password-zip-row {
-  display: flex;
-  gap: 16px;
-  margin-bottom: 20px;
-  flex-wrap: wrap;
-}
-
-.password-zip-row .field-group {
-  flex: 1;
-}
-
-.field-group {
-  margin-bottom: 20px;
 }
 
 hr {
@@ -352,8 +330,8 @@ hr {
   </select>
 </div>
 
-<!-- Custom Names Row (hidden when Keep Original selected) -->
-<div id="customNamesRow" class="row hidden-input">
+<!-- Custom Names (hidden when Keep Original selected) -->
+<div id="customNamesContainer" class="hidden-input">
   <div class="field-group">
     <label>✏️ Custom .bytes name (optional)</label>
     <input type="text" id="bytes_custom" name="bytes_custom" placeholder="e.g., MyMap.bytes">
@@ -364,16 +342,14 @@ hr {
   </div>
 </div>
 
-<!-- Password and ZIP Name - always visible -->
-<div class="password-zip-row">
-  <div class="field-group">
-    <label>🔒 ZIP Password (optional, default: 123456)</label>
-    <input type="text" id="password" name="password" placeholder="Leave empty for default">
-  </div>
-  <div class="field-group">
-    <label>📦 ZIP Filename (optional, default: Default.zip)</label>
-    <input type="text" id="zipname" name="zipname" placeholder="Leave empty for default">
-  </div>
+<!-- Password and ZIP Name - always visible, vertical -->
+<div class="field-group">
+  <label>🔒 ZIP Password (optional, default: 123456)</label>
+  <input type="text" id="password" name="password" placeholder="Leave empty for default">
+</div>
+<div class="field-group">
+  <label>📦 ZIP Filename (optional, default: Default.zip)</label>
+  <input type="text" id="zipname" name="zipname" placeholder="Leave empty for default">
 </div>
 
 <button id="btn" type="submit">⚡ Generate Protected ZIP</button>
@@ -383,18 +359,18 @@ hr {
 
 <script>
 const slotSelect = document.getElementById('slot_select');
-const customNamesRow = document.getElementById('customNamesRow');
+const customNamesContainer = document.getElementById('customNamesContainer');
 const bytesCustom = document.getElementById('bytes_custom');
 const metaCustom = document.getElementById('meta_custom');
 
 function updateCustomNamesRow() {
     const selected = slotSelect.value;
     if (selected === 'original') {
-        customNamesRow.classList.add('hidden-input');
+        customNamesContainer.classList.add('hidden-input');
         bytesCustom.value = '';
         metaCustom.value = '';
     } else {
-        customNamesRow.classList.remove('hidden-input');
+        customNamesContainer.classList.remove('hidden-input');
         const slotNum = parseInt(selected, 10);
         if (!isNaN(slotNum)) {
             bytesCustom.value = `ProjectData_slot_${slotNum}.bytes`;
