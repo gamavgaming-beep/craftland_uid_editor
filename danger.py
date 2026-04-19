@@ -1,10 +1,60 @@
-from flask import Flask, request, render_template_string, send_file
+from flask import Flask, request, render_template_string, send_file, jsonify
 import io
 import pyzipper
 
 app = Flask(__name__)
 
-# Protobuf UID modifier (field 7 varint) – same as before
+# Protobuf UID extractor (only reads field 7)
+def extract_uid_from_bytes(data):
+    i = 0
+    length = len(data)
+    while i < length:
+        # Read field key (varint)
+        key = 0
+        shift = 0
+        while i < length:
+            b = data[i]
+            key |= (b & 0x7F) << shift
+            i += 1
+            shift += 7
+            if not (b & 0x80):
+                break
+        field_num = key >> 3
+        wire_type = key & 0x07
+        if wire_type == 0:  # varint
+            val = 0
+            shift = 0
+            while i < length:
+                b = data[i]
+                val |= (b & 0x7F) << shift
+                i += 1
+                shift += 7
+                if not (b & 0x80):
+                    break
+            if field_num == 7:
+                return val
+        elif wire_type == 2:
+            # length-delimited, skip
+            length_val = 0
+            shift = 0
+            while i < length:
+                b = data[i]
+                length_val |= (b & 0x7F) << shift
+                i += 1
+                shift += 7
+                if not (b & 0x80):
+                    break
+            i += length_val
+        elif wire_type == 1:
+            i += 8
+        elif wire_type == 5:
+            i += 4
+        else:
+            # unknown, skip? break to avoid infinite loop
+            break
+    return None
+
+# Protobuf UID modifier (same as before)
 def modify_protobuf_uid(data, new_uid):
     result = bytearray()
     i = 0
@@ -135,7 +185,6 @@ h2 {
   text-shadow: 0 0 8px rgba(0,255,255,0.3);
 }
 
-/* Drop zones */
 .drop-zone {
   position: relative;
   padding: 25px 20px;
@@ -191,7 +240,6 @@ input[type="file"] {
   display: none;
 }
 
-/* Labels */
 label {
   display: block;
   margin-bottom: 8px;
@@ -201,14 +249,13 @@ label {
   letter-spacing: 0.3px;
 }
 
-/* 🔥 ALL INPUTS have permanent border + glow on focus */
 input[type="text"], 
 input[type="number"], 
 select {
   width: 100%;
   padding: 12px;
   border-radius: 14px;
-  border: 1px solid rgba(0, 255, 255, 0.4);   /* always visible highlight border */
+  border: 1px solid rgba(0, 255, 255, 0.4);
   background: #0f172f;
   color: white;
   margin-bottom: 20px;
@@ -216,9 +263,7 @@ select {
   transition: 0.2s;
 }
 
-input[type="text"]:focus, 
-input[type="number"]:focus, 
-select:focus {
+input:focus, select:focus {
   border-color: #4ff0ff;
   box-shadow: 0 0 0 2px rgba(79, 240, 255, 0.4), 0 0 8px #4ff0ff;
   outline: none;
@@ -273,6 +318,17 @@ button:hover {
 .hidden-input {
   display: none;
 }
+
+.current-uid-box {
+  background: rgba(0, 200, 255, 0.1);
+  border: 1px solid #4ff0ff;
+  border-radius: 14px;
+  padding: 10px;
+  margin-bottom: 20px;
+  text-align: center;
+  font-size: 14px;
+  color: #4ff0ff;
+}
 </style>
 </head>
 <body>
@@ -289,6 +345,12 @@ button:hover {
     <div id="bytes_name" class="filename"></div>
   </div>
 </div>
+
+<!-- Current UID display -->
+<div id="current_uid_container" class="current-uid-box" style="display: none;">
+  🔍 Current UID: <span id="current_uid_value">-</span>
+</div>
+<div id="current_uid_error" class="error" style="display: none;"></div>
 
 <!-- Meta File Upload -->
 <div class="field-group">
@@ -341,7 +403,7 @@ button:hover {
   </div>
 </div>
 
-<!-- Password and ZIP Name - always visible, vertical -->
+<!-- Password and ZIP Name -->
 <div class="field-group">
   <label>🔒 ZIP Password (optional, default: 123456)</label>
   <input type="text" id="password" name="password" placeholder="Leave empty for default">
@@ -384,6 +446,61 @@ function updateCustomNamesRow() {
 slotSelect.addEventListener('change', updateCustomNamesRow);
 updateCustomNamesRow();
 
+// Function to detect current UID from .bytes file
+async function detectCurrentUID(file) {
+    const formData = new FormData();
+    formData.append('bytes_file', file);
+    try {
+        const response = await fetch('/get_uid', {
+            method: 'POST',
+            body: formData
+        });
+        const data = await response.json();
+        if (data.success) {
+            document.getElementById('current_uid_container').style.display = 'block';
+            document.getElementById('current_uid_value').innerText = data.uid;
+            document.getElementById('current_uid_error').style.display = 'none';
+        } else {
+            document.getElementById('current_uid_container').style.display = 'none';
+            document.getElementById('current_uid_error').style.display = 'block';
+            document.getElementById('current_uid_error').innerText = '⚠️ ' + data.error;
+        }
+    } catch (err) {
+        document.getElementById('current_uid_container').style.display = 'none';
+        document.getElementById('current_uid_error').style.display = 'block';
+        document.getElementById('current_uid_error').innerText = '⚠️ Failed to read UID: ' + err.message;
+    }
+}
+
+// Setup file picker change event for bytes file
+const bytesFileInput = document.getElementById('bytes_file');
+bytesFileInput.addEventListener('change', function() {
+    if (this.files.length > 0) {
+        detectCurrentUID(this.files[0]);
+    } else {
+        document.getElementById('current_uid_container').style.display = 'none';
+        document.getElementById('current_uid_error').style.display = 'none';
+    }
+});
+
+// Also for drop zone: we need to override the drop handler to also trigger detection
+const bytesZone = document.getElementById('bytes_zone');
+const originalDropHandler = bytesZone.ondrop;
+bytesZone.ondrop = (e) => {
+    e.preventDefault();
+    bytesZone.classList.remove("correct");
+    let file = e.dataTransfer.files[0];
+    if (!file || !file.name.endsWith('.bytes')) {
+        document.getElementById('bytes_name').innerText = "❌ Invalid file type";
+        document.getElementById('bytes_name').style.color = "#f87171";
+        return;
+    }
+    bytesFileInput.files = e.dataTransfer.files;
+    document.getElementById('bytes_name').innerText = "✅ " + file.name;
+    document.getElementById('bytes_name').style.color = "#4ade80";
+    detectCurrentUID(file);
+};
+
 function setupDrop(zoneId, inputId, nameId, ext) {
     let zone = document.getElementById(zoneId);
     let input = document.getElementById(inputId);
@@ -403,6 +520,10 @@ function setupDrop(zoneId, inputId, nameId, ext) {
         input.files = e.dataTransfer.files;
         nameBox.innerText = "✅ " + file.name;
         nameBox.style.color = "#4ade80";
+        // if this is bytes zone, also detect UID
+        if (zoneId === 'bytes_zone') {
+            detectCurrentUID(file);
+        }
     };
     input.onchange = () => {
         let file = input.files[0];
@@ -414,6 +535,9 @@ function setupDrop(zoneId, inputId, nameId, ext) {
         }
         nameBox.innerText = "✅ " + file.name;
         nameBox.style.color = "#4ade80";
+        if (zoneId === 'bytes_zone') {
+            detectCurrentUID(file);
+        }
     };
 }
 setupDrop("bytes_zone", "bytes_file", "bytes_name", ".bytes");
@@ -452,12 +576,28 @@ function handleUpload() {
 </html>
 """
 
+@app.route('/get_uid', methods=['POST'])
+def get_uid():
+    if 'bytes_file' not in request.files:
+        return jsonify({'success': False, 'error': 'No file uploaded'})
+    file = request.files['bytes_file']
+    if file.filename == '':
+        return jsonify({'success': False, 'error': 'Empty filename'})
+    try:
+        data = file.read()
+        uid = extract_uid_from_bytes(data)
+        if uid is None:
+            return jsonify({'success': False, 'error': 'UID (field 7) not found in file'})
+        return jsonify({'success': True, 'uid': uid})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)})
+
 @app.route('/', methods=['GET', 'POST'])
 def index():
     if request.method == 'GET':
         return render_template_string(HTML)
 
-    # POST handling
+    # POST handling (same as before)
     if 'bytes_file' not in request.files or 'meta_file' not in request.files:
         return "Missing files", 400
     bytes_file = request.files['bytes_file']
