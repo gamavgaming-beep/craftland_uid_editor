@@ -346,12 +346,6 @@ button:hover {
   </div>
 </div>
 
-<!-- Current UID display -->
-<div id="current_uid_container" class="current-uid-box" style="display: none;">
-  🔍 Current UID: <span id="current_uid_value">-</span>
-</div>
-<div id="current_uid_error" class="error" style="display: none;"></div>
-
 <!-- Meta File Upload -->
 <div class="field-group">
   <label>📄 .meta File (required)</label>
@@ -361,6 +355,12 @@ button:hover {
     <div id="meta_name" class="filename"></div>
   </div>
 </div>
+
+<!-- Current UID display -->
+<div id="current_uid_container" class="current-uid-box" style="display: none;">
+  🔍 Current UID: <span id="current_uid_value">-</span>
+</div>
+<div id="current_uid_error" class="error" style="display: none;"></div>
 
 <!-- New UID -->
 <div class="field-group">
